@@ -104,6 +104,8 @@ instance
                     }
 
 
+
+
 {-
 data Exp : Set where 
     Val : ℕ → Exp 
@@ -186,7 +188,25 @@ cataM malg fa = fa malg
 
 eval-left : MAlgebra ExpF ℕ
 eval-left ⟦_⟧ (Val x) = x
-eval-left ⟦_⟧ (Add x y) = ⟦ x ⟧ 
+eval-left ⟦_⟧ (Add x y) = ⟦ x ⟧
+
+Nat-ind :   (P : Nat → Set)
+            (Hz : P z)
+            (Hs : ∀ (n : Nat) → P n → P (s n)) 
+            → Algebra NatF (Σ[ e ∈ Nat ] P e)
+Nat-ind P hz hs Z = z , hz
+Nat-ind P hz hs (S x) = s (proj₁ x) , hs (proj₁ x) (proj₂ x)
+
+-- ensure that the built up terms are equivalent to the previous terms
+WF-proof-alg : {F : Set → Set}{{_ : Functor F}}{P : Fix F → Set}
+                → (alg : Algebra F (Σ[ e ∈ Fix F ] P e)) 
+                → Set
+WF-proof-alg alg = (proj₁ ∘ alg) ≡ (In ∘ fmap proj₁)
+
+
+Nat-ind-WF : ∀(P : Nat → Set)(Hz : P z)(Hs : ∀ (n : Nat) → P n → P (s n))
+    → WF-proof-alg (Nat-ind P Hz Hs)
+Nat-ind-WF P Hz Hs = {!   !}
 
 
 -- mendler algebra with a
