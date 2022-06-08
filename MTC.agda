@@ -18,7 +18,6 @@ record Functor(F : Set → Set): Set where
     field
         fmap : {X Y : Set} → (f : X → Y) → F X → F Y
         -- laws
-
 open Functor {{...}} 
 
 record Monad (F : Set → Set){{_ : Functor F}} : Set where
@@ -47,7 +46,7 @@ OptionFunc = record {
 
 
 open import Data.Nat
-open import Data.Bool
+open import Data.Bool using (not ; true ; false ; Bool)
  
 isSeven : ℕ → Bool 
 isSeven 7 = true
@@ -190,24 +189,100 @@ eval-left : MAlgebra ExpF ℕ
 eval-left ⟦_⟧ (Val x) = x
 eval-left ⟦_⟧ (Add x y) = ⟦ x ⟧
 
+
+ProofAlgebra : {F : Set → Set}(P : Fix F → Set) → Set 
+ProofAlgebra {F} P = Algebra F (Σ[ e ∈ Fix F ] P e)
+
 Nat-ind :   (P : Nat → Set)
             (Hz : P z)
             (Hs : ∀ (n : Nat) → P n → P (s n)) 
-            → Algebra NatF (Σ[ e ∈ Nat ] P e)
+            → ProofAlgebra P
 Nat-ind P hz hs Z = z , hz
 Nat-ind P hz hs (S x) = s (proj₁ x) , hs (proj₁ x) (proj₂ x)
 
--- ensure that the built up terms are equivalent to the previous terms
 WF-proof-alg : {F : Set → Set}{{_ : Functor F}}{P : Fix F → Set}
-                → (alg : Algebra F (Σ[ e ∈ Fix F ] P e)) 
+                → (alg : ProofAlgebra P) 
                 → Set
 WF-proof-alg alg = (proj₁ ∘ alg) ≡ (In ∘ fmap proj₁)
+
+ 
+postulate  Extensionality : {A : Set} {B : A → Set} {f g : (x : A) → B x} → (∀ x → f x ≡ g x) → f ≡ g
 
 
 Nat-ind-WF : ∀(P : Nat → Set)(Hz : P z)(Hs : ∀ (n : Nat) → P n → P (s n))
     → WF-proof-alg (Nat-ind P Hz Hs)
-Nat-ind-WF P Hz Hs = {!   !}
+Nat-ind-WF P Hz Hs = Extensionality λ{Z → refl
+                                    ; (S x) → refl}
 
+{- wrong definition, not an algebra-}
+_+Nat_ : Nat → Nat → Nat 
+In Z +Nat y = y
+In (S x) +Nat y = s (x +Nat y)
+
+
+{-
+BiAlgebra : (F : Set → Set) → (A : Set) → Set 
+BiAlgebra F A = F A × F A → A
+
+nat-add-alg : BiAlgebra NatF Nat
+nat-add-alg (Z , Z) = z
+nat-add-alg (Z , S x) = s x
+nat-add-alg (S x , Z) = s x
+nat-add-alg (S x , S y) = s (s y)
+
+BiAlgebra-fold : {A : Set}{F : Set → Set}{{_ : Functor F}} → BiAlgebra F A → Fix F × Fix F → A 
+BiAlgebra-fold alg = alg ∘ {!   !}
+-}
+
+_ : {n : ℕ} → n + 0 ≡ n 
+_ = {!  !}
+
+-- +Nat is not defined by an algebra
+
+N+0 : Nat → Set
+N+0 n = n +Nat z ≡ n
+
+N+0-alg : ProofAlgebra N+0 
+N+0-alg = Nat-ind N+0 refl (λ n nprf → cong s nprf)
+
+-- this N+0-alg is well formed if natural number induction is well formed
+_ : WF-proof-alg N+0-alg
+_ = Nat-ind-WF N+0 refl (λ n nprf → cong s nprf)
+
+
+-- fold proof
+-- ProofAlgebra :  F(Σ (Fix F) P) → Σ (Fix F) P 
+{-# TERMINATING #-}
+proof-fold : {F : Set → Set}{{_ : Functor F}}{P : Fix F → Set} → ProofAlgebra P → Fix F → Σ (Fix F) P
+proof-fold alg  = alg ∘ (fmap (proof-fold alg) ∘ out)
+
+
+open import Data.Sum using (_⊎_ ; inj₁ ; inj₂)
+
+_∨_ : {F : Set → Set} → (P₁ P₂ : Fix F → Set) → Fix F → Set
+P₁ ∨ P₂ = λ e → P₁ e ⊎ P₂ e
+
+data Even : Nat → Set where 
+    EvenZ : Even z
+    EvenS : ∀ {n : Nat} → Even n → Even (s (s n))
+
+data Odd : Nat → Set where
+    Odd1 : Odd (s z)
+    Odds : ∀ {n : Nat} → Odd n → Odd (s (s n))
+    
+
+Even-Proof-Alg : ProofAlgebra (Even ∨ Odd)
+Even-Proof-Alg Z = z , inj₁ EvenZ
+Even-Proof-Alg x = {!   !}
+{- 
+this seems wrong..
+
+Even-Proof-Alg (S (In Z , inj₁ neven)) = {!   !}
+Even-Proof-Alg (S (In (S x) , inj₁ neven)) = {!   !}
+Even-Proof-Alg (S (n , inj₂ nodd)) = {!   !}
+-}
+
+-- how to fold a proof algebra?
 
 -- mendler algebra with a
 {-
@@ -493,4 +568,4 @@ module Inj where
         _ : Exec TeleType
         _ = record { execAlg = λ{  (GetString io) → getStrLn IO.>>= io
                                  ; (PutString c io) → putStrLn c IO.>> io} }
-    
+     
