@@ -36,19 +36,20 @@ module KeyValDSL where
     open import Data.Maybe
     open import Data.Unit
 
-    data KeyValF (X : Set) : Set where 
-        GetKey : String → (Maybe String → X) → KeyValF X 
-        PutKey : String → String → X → KeyValF X
+    data KeyValF (A : Set)(X : Set) : Set where 
+        GetKey : String → (Maybe A → X) → KeyValF A X 
+        PutKey : String → A → X → KeyValF A X
 
     instance
-        kv-F : Functor KeyValF
+        kv-F : {A : Set} → Functor (KeyValF A)
         kv-F = record { fmap = λ{ f (GetKey s m) → GetKey s (f ∘ m)
                                 ; f (PutKey s₁ s₂ a) → PutKey s₁ s₂ (f a)}}
 
-    KeyVal = Free KeyValF
+    KeyVal : {Set} → Set → Set
+    KeyVal {A} = Free (KeyValF A)
 
     -- smart constructors
-    getKey : String → KeyVal (Maybe String)
+    getKey : {A : Set} → String → KeyVal (Maybe A)
     getKey s = liftF (GetKey s id)
 
     putKey : String → String → KeyVal ⊤
