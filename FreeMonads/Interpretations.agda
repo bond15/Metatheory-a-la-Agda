@@ -76,7 +76,21 @@ module ConsoleDSLIO where
     
 
 
-module EvalConsole where 
+module EvalConsoleStateT where 
+    open ConsoleDSL
+    open ConsoleDSLStateT
+    open import Store
+    open import TypeClassInstances
+
+    open ConsolPrograms
+    open import Data.Unit 
+    
+    ex : M ⊤ 
+    ex = foldFree consoleST prog
+
+    
+    
+module EvalConsoleIO where 
     open ConsoleDSL
     open ConsoleDSLIO
     open ConsolPrograms
