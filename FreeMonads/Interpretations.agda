@@ -1,5 +1,6 @@
 {-# OPTIONS --guardedness #-}
 {-# OPTIONS --type-in-type #-}
+{-# OPTIONS --allow-unsolved-metas #-}
 
 module Interpretations where 
 open import Level
@@ -66,6 +67,21 @@ module KeyValDSLI where
     
 
 
+module ConsolPrograms where 
+    open ConsoleDSL
+    open import Data.Unit
+    open Monad{{...}}
+    open import Function
+
+    prog : Console ⊤
+    prog = do 
+            putStrLn "hello, please enter your name"
+            name ← getLine 
+            case name of λ{ "jimbo"  → putStrLn "Welcome Jimbo"; 
+                            s        → putStrLn "Unauthorized access"}
+            return tt
+
+
 module ConsoleDSLI where 
     open ConsoleDSL
 
@@ -85,3 +101,18 @@ module ConsoleDSLI where
                                  x ← IO.getLine
                                  return (cb x)
     
+
+
+module EvalConsole where 
+    open ConsoleDSL
+    open ConsoleDSLI
+    open ConsolPrograms
+
+    open import Data.Unit
+    open import IO
+    
+    ex : IO ⊤
+    ex = foldFree consoleIO prog
+    
+
+    main = run ex

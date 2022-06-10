@@ -91,4 +91,11 @@ monad .α (ImPure mfx) = do
 -- This would be an operation in the functor category and not the underlying category
 --_~+~_ : {F G T : Set → Set}{{_ : Functor F}}{{_ : Functor G}}{{_ : Functor T}}
 --     → F ~> T → G ~> T → {! (F ⊹ G) ~> ?  !}
---f ~+~ g = {!   !}   
+--f ~+~ g = {!   !}  
+
+--https://hackage.haskell.org/package/free-5.1.8/docs/src/Control.Monad.Free.html#foldFree
+{-# TERMINATING #-}
+foldFree : {A : Set}{M F : Set → Set}{{_ : Functor M}}{{_ : Monad M}}{{_ : Functor F}} 
+    → F ~> M → Free F A → M A
+foldFree ϕ (Pure x) = return x
+foldFree ϕ (ImPure x) = (ϕ .α) x >>= foldFree ϕ
