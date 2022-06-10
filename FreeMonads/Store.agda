@@ -14,10 +14,11 @@ module Store where
     open import Agda.Builtin.String renaming (primStringEquality to _=S_)
     open Monad{{...}}
 
+    -- A key value store
     Store : Set
     Store = List (String × ℕ) 
 
-    
+    -- State and StateT monads
     data State (S X : Set) : Set where 
         St : (S → X × S) → State S X 
 
@@ -29,7 +30,6 @@ module Store where
 
     runST : {S X : Set}{M : Set → Set}{{_ : Monad M}}→ StateT S M X → (S → M (X × S))
     runST (ST x) = x
-
 
 
     instance
@@ -49,7 +49,7 @@ module Store where
         stateT-M = record { return = λ a → ST (λ s → return (a , s)) ; _>>=_ = λ{(ST sa) f → ST (λ s → {!   !} )}}
 
 
-    -- use a monad transformer stack?   
+    -- A monad transformer Stack for stateful computation that can interact with IO
     M : Set → Set
     M = StateT Store IO 
 
@@ -76,3 +76,13 @@ module Store where
             put' ((k' , v') ∷ xs) with (k =S k')
             ...             | true = (k , v) ∷ xs
             ...             | false = put' xs
+
+    print : String → M ⊤
+    print s = ST λ store → do 
+                            putStrLn s
+                            return (tt , store)
+
+    read : M String 
+    read = ST (λ store → do 
+                            s ← IO.getLine 
+                            return (s , store))

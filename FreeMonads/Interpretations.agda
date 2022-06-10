@@ -15,13 +15,12 @@ module KeyValDSLI where
     open import Store
     open import TypeClassInstances
     open import Data.Nat
-
-
     
+    -- interpret KeyValue into the monad transformer stack using State and IO
     kvList : KeyValF ℕ ~> M 
-    kvList .α (GetKey k cb) = do  
+    kvList .α (GetKey k cb) = do      -- use a monad transformer stack?   
                                 v ← find k 
-                                return (cb  v)
+                                return (cb v)
     kvList .α (PutKey k v a) = do 
                                 put k v 
                                 return a
@@ -42,7 +41,21 @@ module ConsolPrograms where
             return tt
 
 
-module ConsoleDSLI where 
+module ConsoleDSLStateT where 
+    open ConsoleDSL 
+    open import Store
+    open import TypeClassInstances
+    open Monad{{...}}
+
+    consoleST : ConsoleF ~> M 
+    consoleST .α (PutStrLn s a) = do 
+                                    print s
+                                    return a
+    consoleST .α (GetLine cb) = do 
+                                    s ← read 
+                                    return (cb s)
+
+module ConsoleDSLIO where 
     open ConsoleDSL
 
     open import IO
@@ -65,7 +78,7 @@ module ConsoleDSLI where
 
 module EvalConsole where 
     open ConsoleDSL
-    open ConsoleDSLI
+    open ConsoleDSLIO
     open ConsolPrograms
     open import TypeClassInstances
 
