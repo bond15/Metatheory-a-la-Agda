@@ -39,6 +39,11 @@ module KeyValDSL where
     data KeyValF (A : Set)(X : Set) : Set where 
         GetKey : String → (Maybe A → X) → KeyValF A X 
         PutKey : String → A → X → KeyValF A X
+        -- id : Get ∘ Put ≡ id 
+        -- How to add Proof obligations?
+        -- Try localization challenge problem (key valu store)
+        -- Do proof algebras lift to monad algebras?
+        -- bidirectional interp <-> abstract? in the case of deep embedding this might be possible?
 
     instance
         kv-F : {A : Set} → Functor (KeyValF A)

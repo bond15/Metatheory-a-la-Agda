@@ -16,7 +16,7 @@ module Store where
 
     -- A key value store
     Store : Set
-    Store = List (String × ℕ) 
+    Store = List (String × String) 
 
     -- State and StateT monads
     data State (S X : Set) : Set where 
@@ -59,16 +59,16 @@ module Store where
     getStore : M Store
     getStore = ST λ s → return (s , s)
 
-    find : String → M (Maybe ℕ)
+    find : String → M (Maybe String)
     find k  = ST (λ s → return (find' k s , s))
         where 
-            find' : String → Store → Maybe ℕ 
+            find' : String → Store → Maybe String 
             find' key [] = nothing
             find' key ((s , n) ∷ store) with(key =S s)
             ...                                  | true = just n
             ...                                  | false = find' key  store
 
-    put : String → ℕ → M ⊤ 
+    put : String → String → M ⊤ 
     put k v = ST (λ s → return (tt , put' s))
         where 
             put' : Store → Store

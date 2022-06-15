@@ -1,7 +1,17 @@
 -- examples motivated from https://www.tweag.io/blog/2018-02-05-free-monads/
 module FreeMonad where
-
+open import Function using (_∘_)
 -- Haskell style definitions of Functor and Monad using Agda's instance arguments as type classes
+
+record Poly : Set₁ where 
+    field 
+        pos : Set 
+        dir : pos → Set
+
+open import Data.Product
+record Functor' {A : Set}{B : A → Set}(F : Σ A (λ a → B a) → Set) : Set₁ where 
+
+
 record Functor (F : Set → Set) : Set₁ where 
     field 
         fmap : ∀{A B} → (A → B) → F A → F B
@@ -9,9 +19,14 @@ record Functor (F : Set → Set) : Set₁ where
 open Functor{{...}}
 open import Data.Sum 
 
+data _⊹_ (F G : Set → Set)(E : Set): Set where 
+    InL : F E → (F ⊹ G) E 
+    InR : G E → (F ⊹ G) E
 
---_+_ : {F G : Set → Set} → Functor F → Functor G → Functor {! [ F , G ]′  !}
--- F + G = {!   !}
+instance 
+    ⊹-F : {F G : Set → Set}{{_ : Functor F}}{{_ : Functor G}} → Functor  (F ⊹ G) 
+    ⊹-F {F}{G}{{Fin}}{{Gin}} = record { fmap = λ{ x (InL x₁) → InL (Functor.fmap Fin x x₁)
+                                                ; x (InR x₁) → InR (Functor.fmap Gin x x₁) }}
 
 record Monad (F : Set → Set) : Set₁ where 
     field
@@ -25,6 +40,7 @@ open Monad{{...}}
 
 -- natural transformation
 record _~>_ (F G : Set → Set){{_ : Functor F}}{{_ : Functor G}} : Set₁ where
+    constructor α≔_
     field
         α : ∀ {A} → F A → G A -- component of a natural transformation
 open _~>_
@@ -34,7 +50,6 @@ open _~>_
 data Free (F : Set → Set){{_ : Functor F}} (A : Set) : Set where
     Pure : A → Free F A
     ImPure : (F (Free F A)) → Free F A
-
 
 -- Showing the Free Monad is a Functor and a Monad
 instance
@@ -87,15 +102,36 @@ monad .α (ImPure mfx) = do
                          monad .α fx
 
 
--- size issue?
--- This would be an operation in the functor category and not the underlying category
---_~+~_ : {F G T : Set → Set}{{_ : Functor F}}{{_ : Functor G}}{{_ : Functor T}}
---     → F ~> T → G ~> T → {! (F ⊹ G) ~> ?  !}
---f ~+~ g = {!   !}  
+--\b+
+_⊞_ : {F G T : Set → Set}{{_ : Functor F}}{{_ : Functor G}}{{_ : Functor T}}
+     → F ~> T → G ~> T → (F ⊹ G) ~> T
+(α≔ α) ⊞ (α≔ β) = α≔ λ{(InL x) → α x
+                     ; (InR x) → β x}
 
+left : {F G : Set → Set}{{_ : Functor F}}{{_ : Functor G}} → Free F ~> Free (F ⊹ G)
+left = freeM (α≔ InL)
+
+right : {F G : Set → Set}{{_ : Functor F}}{{_ : Functor G}} → Free G ~> Free (F ⊹ G)
+right = freeM (α≔ InR)
+                       
 --https://hackage.haskell.org/package/free-5.1.8/docs/src/Control.Monad.Free.html#foldFree
 {-# TERMINATING #-}
 foldFree : {A : Set}{M F : Set → Set}{{_ : Functor M}}{{_ : Monad M}}{{_ : Functor F}} 
     → F ~> M → Free F A → M A
 foldFree ϕ (Pure x) = return x
 foldFree ϕ (ImPure x) = (ϕ .α) x >>= foldFree ϕ
+
+{-# TERMINATING #-}
+lift : {M F : Set → Set}{{_ : Functor M}}{{_ : Monad M}}{{_ : Functor F}} 
+    → F ~> M → Free F ~> M 
+lift ϕ .α (Pure x) = return x
+lift ϕ .α (ImPure x) = (ϕ .α) x >>= lift ϕ .α
+
+-- vertical compositon of natural transformations
+_∙_ : {M F G : Set → Set}{{_ : Functor F}}{{_ : Functor G}}{{_ : Functor M}}
+    → G ~> M → F ~> G → F ~> M
+(α≔ β) ∙ (α≔ α) = α≔ (β ∘ α)
+
+_⊙_ : {M F G : Set → Set}{{_ : Functor F}}{{_ : Functor G}}{{_ : Functor M}}{{_ : Monad M}}
+    → G ~> M → F ~> Free G → Free F ~> M
+β ⊙ α = lift β ∙ lift α 
