@@ -17,6 +17,7 @@ module AgdaCat where
     Agda .idr = refl
     Agda .assoc = refl
 
+-- consider only the subcategory of the endofunctor category spaned by Poly?
 module AgdaFunCat where 
     open AgdaCat using (Agda)
     open Functor
@@ -59,7 +60,7 @@ module AgdaFunCat where
                     cond = 
                         η' Y ⊚ F₁' f        ≡⟨ refl ⟩ 
                         β Y ⊚ α Y ⊚ F₁' f   ≡⟨ sym (assocA {f = β Y} {g = α Y} )⟩ 
-                        β Y ⊚ (α Y ⊚ F₁' f) ≡⟨ cong₂ {A = {! β Y  !}} _⊚_ refl (commute-top {X = X}{Y = Y} f)   ⟩ 
+                        β Y ⊚ (α Y ⊚ F₁' f) ≡⟨ cong₂ {A = {! β Y !}} _⊚_ refl (commute-top {X = X}{Y = Y} f)   ⟩ 
                         β Y ⊚ (G₁ f ⊚ α X)  ≡⟨ assocA {f = β Y} {g = G₁ f} {h = α X} ⟩ 
                         (β Y ⊚ G₁ f) ⊚ α X  ≡⟨ cong₂ _⊚_ (commute-bot {X = X} {Y = Y} f) refl ⟩ 
                         (H₁ f ⊚ β X) ⊚ α X  ≡⟨ refl ⟩ 
