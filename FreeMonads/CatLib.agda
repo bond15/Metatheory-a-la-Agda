@@ -407,7 +407,7 @@ module CatLib where
 
         -- laws 
         field 
-            Hom[_]-set : ∀{a b : Ob} (f : a ⇒ b) → (x : Ob[ a ]) → (y : Ob[ b ]) → is-set (Hom[ f ] x y)
+         --   Hom[_]-set : ∀{a b : Ob} (f : a ⇒ b) → (x : Ob[ a ]) → (y : Ob[ b ]) → is-set (Hom[ f ] x y)
             idr' : ∀ {a b x y}{f : a ⇒ b} → (f' : Hom[ f ] x y) → (f' ∘' id') ≡[ idr  ] f'
             idl' : ∀ {a b x y}{f : a ⇒ b} → (f' : Hom[ f ] x y) → (id' ∘' f') ≡[ idl  ] f'
             assoc' : ∀ {a b c d w x y z}{f : c ⇒ d} {g : b ⇒ c}{h : a ⇒ b} → 

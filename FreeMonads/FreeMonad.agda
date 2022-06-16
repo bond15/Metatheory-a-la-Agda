@@ -35,6 +35,11 @@ record _~>_ (F G : Set → Set){{_ : Functor F}}{{_ : Functor G}} : Set₁ where
         α : ∀ {A} → F A → G A -- component of a natural transformation
 open _~>_
 
+
+record _~>'_ {F G : Set → Set}(_ : Functor F)(_ : Functor G) : Set₁ where
+    constructor α≔_
+    field
+        α : ∀ {A} → F A → G A -- component of a natural transformation
 -- definition of the free monad
 {-# NO_POSITIVITY_CHECK #-}
 data Free (F : Set → Set){{_ : Functor F}} (A : Set) : Set where
@@ -121,6 +126,10 @@ lift ϕ .α (ImPure x) = (ϕ .α) x >>= lift ϕ .α
 _∙_ : {M F G : Set → Set}{{_ : Functor F}}{{_ : Functor G}}{{_ : Functor M}}
     → G ~> M → F ~> G → F ~> M
 (α≔ β) ∙ (α≔ α) = α≔ (β ∘ α)
+
+_∙'_ : {M F G : Set → Set}{F' : Functor F}{G' : Functor G}{M' : Functor M}
+    → G' ~>' M' → F' ~>' G' → F' ~>' M'
+(α≔ β) ∙' (α≔ α) = α≔ (β ∘ α)
 
 _⊙_ : {M F G : Set → Set}{{_ : Functor F}}{{_ : Functor G}}{{_ : Functor M}}{{_ : Monad M}}
     → G ~> M → F ~> Free G → Free F ~> M

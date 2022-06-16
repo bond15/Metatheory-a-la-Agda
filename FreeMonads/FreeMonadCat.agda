@@ -20,7 +20,7 @@ module AgdaCat where
     Agda .assoc = refl
 
 module FunCatPoly where 
-    open import Poly
+    open import Poly renaming (lift to liftPoly)
     open Poly[_,_]
     open Category
     open import Category using (PFun; PNat; Functor)
@@ -36,18 +36,33 @@ module FunCatPoly where
     PolyCat .idl = refl
     PolyCat .assoc = refl
 
+    open import FreeMonad
+
+    unwrap : {F : Set → Set} → FreeMonad.Functor F → (Set → Set)
+    unwrap {F} _ = F
+    
+    instance
+        PFun' : {p : Poly} → FreeMonad.Functor ⦅ p ⦆ 
+        PFun' {p} = record { fmap = liftPoly p }
+
+
+    open import Data.Product
+    open import Agda.Builtin.Sigma 
+
+    PNat' : {p q : Poly} → Poly[ p , q ] → FreeMonad._~>_  ⦅ p ⦆ ⦅ q ⦆
+    PNat' p⇒q = α≔ λ ⦅p⦆A → onPos p⇒q (fst ⦅p⦆A) , λ x → snd ⦅p⦆A (onDir p⇒q (fst ⦅p⦆A) x)
 
     -- Displayed category using PFun and PNat??
+    -- PFun And PNat include the Laws!
     open Displayed
-    AgdaFunCat : Displayed PolyCat {!   !} {!   !} 
-    AgdaFunCat .Ob[_] X = ⦅ X ⦆ {!   !}
-    AgdaFunCat .Hom[_] = {!   !}
-    AgdaFunCat .id' = {!   !}
-    AgdaFunCat ._∘'_ = {!   !}
-    AgdaFunCat .Hom[_]-set = {!   !}
-    AgdaFunCat .idr' = {!   !}
-    AgdaFunCat .idl' = {!   !}
-    AgdaFunCat .assoc' = {!   !}
+    AgdaFunCat : Displayed PolyCat (suc zero) (suc zero) 
+    Ob[ AgdaFunCat ] p = FreeMonad.Functor ⦅ p ⦆ -- add laws here
+    Hom[ AgdaFunCat ] p⇒q = FreeMonad._~>'_
+    AgdaFunCat .id' = α≔ λ x → x
+    AgdaFunCat ._∘'_ = _∙'_
+    AgdaFunCat .idr' = λ f' → refl
+    AgdaFunCat .idl' = λ f' → refl
+    AgdaFunCat .assoc' = λ f' g' h' → refl
 
 
 
@@ -87,18 +102,18 @@ module AgdaFunCat where
 
             nt : NaturalTransformationT F H
             nt .η X = β X ⊚ α X 
-            nt .commute {X} {Y} f = cond
+            nt .commute {X} {Y} f = {!   !}
                 where
                     open NaturalTransformationT nt renaming (η to η')
 
-                    cond = 
+                   {-} cond = 
                         η' Y ⊚ F₁' f        ≡⟨ refl ⟩ 
                         β Y ⊚ α Y ⊚ F₁' f   ≡⟨ sym (assocA {f = β Y} {g = α Y} )⟩ 
                         β Y ⊚ (α Y ⊚ F₁' f) ≡⟨ cong₂ {A = {! β Y !}} _⊚_ refl (commute-top {X = X}{Y = Y} f)   ⟩ 
                         β Y ⊚ (G₁ f ⊚ α X)  ≡⟨ assocA {f = β Y} {g = G₁ f} {h = α X} ⟩ 
                         (β Y ⊚ G₁ f) ⊚ α X  ≡⟨ cong₂ _⊚_ (commute-bot {X = X} {Y = Y} f) refl ⟩ 
                         (H₁ f ⊚ β X) ⊚ α X  ≡⟨ refl ⟩ 
-                        H₁ f ⊚ β X ⊚ α X    ∎
+                        H₁ f ⊚ β X ⊚ α X    ∎ -}
     
             
     AgdaFun .idl = {!   !}
