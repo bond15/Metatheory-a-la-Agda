@@ -1,6 +1,8 @@
+{-# OPTIONS --without-K #-}
 module FreeMonadCat where 
 open import CatLib 
 open import Level 
+open Level renaming (suc to lsuc)
 open import Cubical.Core.Everything using (_≡_)
 open import Cubical.Foundations.Prelude using (refl)
 
@@ -16,6 +18,38 @@ module AgdaCat where
     Agda .idl = refl
     Agda .idr = refl
     Agda .assoc = refl
+
+module FunCatPoly where 
+    open import Poly
+    open Poly[_,_]
+    open Category
+    open import Category using (PFun; PNat; Functor)
+
+
+    -- Incorrect. Type in Type crap.. in Poly
+    PolyCat : Category zero zero 
+    PolyCat .Ob = Poly
+    PolyCat ._⇒_ = Poly[_,_]
+    PolyCat .id = (λ x → x) ⇒ₚ λ i x → x
+    PolyCat ._∘_ p q = q ⇒∘ₚ p
+    PolyCat .idr = refl
+    PolyCat .idl = refl
+    PolyCat .assoc = refl
+
+
+    -- Displayed category using PFun and PNat??
+    open Displayed
+    AgdaFunCat : Displayed PolyCat {!   !} {!   !} 
+    AgdaFunCat .Ob[_] X = ⦅ X ⦆ {!   !}
+    AgdaFunCat .Hom[_] = {!   !}
+    AgdaFunCat .id' = {!   !}
+    AgdaFunCat ._∘'_ = {!   !}
+    AgdaFunCat .Hom[_]-set = {!   !}
+    AgdaFunCat .idr' = {!   !}
+    AgdaFunCat .idl' = {!   !}
+    AgdaFunCat .assoc' = {!   !}
+
+
 
 -- consider only the subcategory of the endofunctor category spaned by Poly?
 module AgdaFunCat where 

@@ -378,3 +378,38 @@ module CatLib where
 
         open Pushes public
             
+
+    -- Displayed Categories
+    -- https://arxiv.org/pdf/1705.04296.pdf
+    -- https://1lab.dev/Cat.Displayed.Base.html#682
+
+    -- idea, add structure to some base category
+    -- example: Sets & functions -> monoids & monoid homs
+    open import Cubical.Core.Everything using (_≡_; PathP)
+    record Displayed {o ℓ} (B : Category o ℓ) (o' ℓ' : Level) : Set (o ⊔ ℓ ⊔ lsuc o' ⊔ lsuc ℓ') where 
+        open Category B
+        -- data 
+        field 
+            Ob[_] : Ob → Set o'
+            Hom[_] : ∀{x y : Ob} → x ⇒ y → Ob[ x ] → Ob[ y ] → Set ℓ'
+            id' : ∀ {a : Ob} {x : Ob[ a ]} → Hom[ id ] x x  
+            _∘'_ : ∀ {a b c x y z}{f : b ⇒ c}{g : a ⇒ b} → 
+                Hom[ f ] y z → Hom[ g ] x y → Hom[ f ∘ g ] x z
+
+        infixr 40 _∘'_
+
+        -- equalities in the displayed category should respect equalities in the base?
+        -- not quite what this is
+        _≡[_]_ : ∀ {a b x y}{f g : a ⇒ b} → Hom[ f ] x y → f ≡ g → Hom[ g ] x y → Set ℓ'
+        _≡[_]_ {a} {b} {x} {y} f' p g' = PathP (λ i → Hom[ p i ] x y) f' g'
+
+        infix 30 _≡[_]_
+
+        -- laws 
+        field 
+            Hom[_]-set : ∀{a b : Ob} (f : a ⇒ b) → (x : Ob[ a ]) → (y : Ob[ b ]) → is-set (Hom[ f ] x y)
+            idr' : ∀ {a b x y}{f : a ⇒ b} → (f' : Hom[ f ] x y) → (f' ∘' id') ≡[ idr  ] f'
+            idl' : ∀ {a b x y}{f : a ⇒ b} → (f' : Hom[ f ] x y) → (id' ∘' f') ≡[ idl  ] f'
+            assoc' : ∀ {a b c d w x y z}{f : c ⇒ d} {g : b ⇒ c}{h : a ⇒ b} → 
+                (f' : Hom[ f ] y z) → (g' : Hom[ g ] x y) → (h' : Hom[ h ] w x) → 
+                f' ∘' (g' ∘' h') ≡[ assoc ] ((f' ∘' g') ∘' h' )
