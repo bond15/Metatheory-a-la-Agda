@@ -1,6 +1,7 @@
 {-# OPTIONS --allow-unsolved-metas #-}
 
--- Taken from https://github.com/agda/agda-categories
+-- Partially from https://github.com/agda/agda-categories
+-- using Cubical Agda for enhanced equality type
 module CatLib where 
     open import Cubical.Core.Everything using (_≡_)
     open import Data.Nat using (ℕ;suc)
