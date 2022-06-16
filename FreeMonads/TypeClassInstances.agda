@@ -4,7 +4,9 @@
 module TypeClassInstances where 
     open import FreeMonad 
     open import Data.List
-    open import IO
+    open import IO renaming (_>>=_ to _>>IO=_; return to returnIO)
+    open Functor
+    open Monad
     
     instance 
         list-F : Functor List 
@@ -16,4 +18,8 @@ module TypeClassInstances where
         -- This is the only thing that requires the --type-in-type flag
         -- IO : Set ℓ → Set (suc ℓ)
         io-M : Monad IO 
-        io-M = {!   !}
+        io-M ._>>=_ = _>>IO=_
+        io-M .return = returnIO
+
+        io-F : Functor IO 
+        io-F .fmap f ioa = ioa >>IO= λ a → returnIO (f a)

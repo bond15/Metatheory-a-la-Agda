@@ -3,21 +3,11 @@ module FreeMonad where
 open import Function using (_∘_)
 -- Haskell style definitions of Functor and Monad using Agda's instance arguments as type classes
 
-record Poly : Set₁ where 
-    field 
-        pos : Set 
-        dir : pos → Set
-
-open import Data.Product
-record Functor' {A : Set}{B : A → Set}(F : Σ A (λ a → B a) → Set) : Set₁ where 
-
-
 record Functor (F : Set → Set) : Set₁ where 
     field 
         fmap : ∀{A B} → (A → B) → F A → F B
 
 open Functor{{...}}
-open import Data.Sum 
 
 data _⊹_ (F G : Set → Set)(E : Set): Set where 
     InL : F E → (F ⊹ G) E 
