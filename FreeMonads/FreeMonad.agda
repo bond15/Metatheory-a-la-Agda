@@ -1,12 +1,20 @@
 -- examples motivated from https://www.tweag.io/blog/2018-02-05-free-monads/
 module FreeMonad where
-open import Function using (_∘_)
+open import Function using (_∘_;id)
 -- Haskell style definitions of Functor and Monad using Agda's instance arguments as type classes
 
 record Functor (F : Set → Set) : Set₁ where 
     field 
         fmap : ∀{A B} → (A → B) → F A → F B
 
+open import Cubical.Core.Everything using (_≡_)
+open import Cubical.Foundations.Prelude hiding (lift; _∙_; _∙'_)
+
+record Functor' (F : Set → Set) : Set₁ where 
+    field 
+        fmap' : ∀{A B} → (A → B) → F A → F B
+        fid : ∀ {A} → id (F A) ≡ F (id A)
+        fcomp : ∀{A B C}{f : A → B}{g : B → C} → fmap' (g ∘ f) ≡ fmap' g ∘ fmap' f
 open Functor{{...}}
 
 data _⊹_ (F G : Set → Set)(E : Set): Set where 
@@ -36,10 +44,15 @@ record _~>_ (F G : Set → Set){{_ : Functor F}}{{_ : Functor G}} : Set₁ where
 open _~>_
 
 
-record _~>'_ {F G : Set → Set}(_ : Functor F)(_ : Functor G) : Set₁ where
-    constructor α≔_
+record _~>'_ {F G : Set → Set}(F' : Functor' F)(G' : Functor' G) : Set₁ where
+    constructor α≔_st_
+    
+    F-fmap = F' .Functor'.fmap'
+    G-fmap = G' .Functor'.fmap'
     field
         α : ∀ {A} → F A → G A -- component of a natural transformation
+        commmute : ∀{A B : Set }(f : A → B) → α ∘ F-fmap f ≡ G-fmap f ∘ α
+
 -- definition of the free monad
 {-# NO_POSITIVITY_CHECK #-}
 data Free (F : Set → Set){{_ : Functor F}} (A : Set) : Set where
@@ -127,9 +140,23 @@ _∙_ : {M F G : Set → Set}{{_ : Functor F}}{{_ : Functor G}}{{_ : Functor M}}
     → G ~> M → F ~> G → F ~> M
 (α≔ β) ∙ (α≔ α) = α≔ (β ∘ α)
 
-_∙'_ : {M F G : Set → Set}{F' : Functor F}{G' : Functor G}{M' : Functor M}
+
+
+_∙'_ : {M F G : Set → Set}{F' : Functor' F}{G' : Functor' G}{M' : Functor' M}
     → G' ~>' M' → F' ~>' G' → F' ~>' M'
-(α≔ β) ∙' (α≔ α) = α≔ (β ∘ α)
+_∙'_ {M} {F} {G} {F'}{G'}{M'} (α≔ β st sq₂) (α≔ α st sq₁) = α≔ β ∘ α st cond
+    where 
+        ffmap = F' .Functor'.fmap'
+        gfmap = G' .Functor'.fmap' 
+        mfmap = M' .Functor'.fmap'
+
+        cond : {A B : Set} (f : A → B) → (β ∘ α) ∘ ffmap f ≡ mfmap f ∘ (β ∘ α)
+        cond {A} f = 
+            (β ∘ α) ∘ ffmap f   ≡⟨ refl ⟩ 
+            β ∘ (α ∘ ffmap f)   ≡⟨ cong (β ∘_) (sq₁ f) ⟩ 
+            (β ∘ gfmap f) ∘ α   ≡⟨ cong (_∘ α) (sq₂ f) ⟩ 
+            mfmap f ∘ (β ∘ α )  ∎
+
 
 _⊙_ : {M F G : Set → Set}{{_ : Functor F}}{{_ : Functor G}}{{_ : Functor M}}{{_ : Monad M}}
     → G ~> M → F ~> Free G → Free F ~> M

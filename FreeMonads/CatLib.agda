@@ -4,6 +4,8 @@
 -- using Cubical Agda for enhanced equality type
 module CatLib where 
     open import Cubical.Core.Everything using (_≡_)
+    open import Cubical.Foundations.Prelude
+
     open import Data.Nat using (ℕ;suc)
     open import Agda.Primitive using (Level; lsuc ; _⊔_)
 
@@ -26,6 +28,25 @@ module CatLib where
     is-set : ∀{ℓ} → Set ℓ → Set ℓ 
     is-set A = is-hlevel A 2
 
+    coe0→1 : ∀ {ℓ} (A : I → Type ℓ) → A i0 → A i1
+    coe0→1 A a = transp (λ i → A i) i0 a
+
+    coe0→i : ∀ {ℓ : I → Level} (A : ∀ i → Type (ℓ i)) (i : I) → A i0 → A i
+    coe0→i A i a = transp (λ j → A (i ∧ j)) (~ i) a
+    
+    to-pathp : ∀ {ℓ} {A : I → Type ℓ} {x : A i0} {y : A i1}
+         → coe0→1 A x ≡ y
+         → PathP A x y
+    to-pathp {A = A} {x} p i =
+        hcomp (λ j → λ { (i = i0) → x
+                        ; (i = i1) → p j })
+                (coe0→i A i x)
+
+    is-prop→pathp : ∀ {ℓ} {B : I → Type ℓ} → ((i : I) → is-prop (B i))
+              → (b0 : B i0) (b1 : B i1)
+              → PathP (λ i → B i) b0 b1
+    is-prop→pathp {B = B} hB b0 b1 = to-pathp (hB _ _ _)
+
     record Category (o h : Level) : Set (lsuc (o ⊔ h)) where 
         field 
             Ob : Set o
@@ -39,6 +60,13 @@ module CatLib where
 
 
         infixr 40 _∘_
+
+
+    module Hom-Set {o ℓ} (C : Category o ℓ) where 
+        open Category C
+
+        hom-set-cond : Set (o ⊔ ℓ)
+        hom-set-cond = ∀ (x y : Ob) → is-set (x ⇒ y)
 
     module ObjectProduct{o ℓ : Level} (𝒞 : Category o ℓ) where
         open Category 𝒞
@@ -85,7 +113,26 @@ module CatLib where
 
 
 
-            
+    module ObjectCoproduct{o ℓ : Level} (𝒞 : Category o ℓ) where
+        open Category 𝒞
+
+        private 
+            variable
+                A B C D : Ob 
+                h f g : A ⇒ B
+
+        record Coproduct (A B : Ob) : Set (o ⊔ ℓ) where
+            infix 10 ⟨_+_⟩
+
+            field
+                A+B   : Ob
+                inj₁  : A ⇒ A+B 
+                inj₂  : B ⇒ A+B
+                ⟨_+_⟩ : A ⇒ C → B ⇒ C → A+B ⇒ C
+
+                inject₁ : ⟨ f + g ⟩ ∘ inj₁ ≡ f
+                inject₂ : ⟨ f + g ⟩ ∘ inj₂ ≡ g
+                unique  : h ∘ inj₁ ≡ f → h ∘ inj₂ ≡ g → ⟨ f + g ⟩ ≡ h 
                 
 
     module BinaryProducts {o h} (𝒞 : Category o h) where
