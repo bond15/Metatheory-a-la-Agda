@@ -4,7 +4,7 @@
 -- using Cubical Agda for enhanced equality type
 module CatLib where 
     open import Cubical.Core.Everything using (_≡_)
-    open import Cubical.Foundations.Prelude
+    open import Cubical.Foundations.Prelude hiding (_∙_)
 
     open import Data.Nat using (ℕ;suc)
     open import Agda.Primitive using (Level; lsuc ; _⊔_)
@@ -479,3 +479,81 @@ module CatLib where
             assoc' : ∀ {a b c d w x y z}{f : c ⇒ d} {g : b ⇒ c}{h : a ⇒ b} → 
                 (f' : Hom[ f ] y z) → (g' : Hom[ g ] x y) → (h' : Hom[ h ] w x) → 
                 f' ∘' (g' ∘' h') ≡[ assoc ] ((f' ∘' g') ∘' h' )
+
+    module F-alg {o ℓ} (𝒞 : Category o ℓ) where 
+        open Functor
+    
+        record F-Algebra (F : FunctorT 𝒞 𝒞) : Set (o ⊔ ℓ) where 
+            open Category 𝒞
+            open FunctorT F
+            field 
+                carrier : Ob
+                alg : F₀ carrier ⇒ carrier
+            
+        
+        iterate : {F : FunctorT 𝒞 𝒞} → F-Algebra F → F-Algebra F
+        iterate {F} Falg = record { 
+                            carrier = F₀ carrier ; 
+                            alg = F₁ alg
+                            }
+            where 
+                open FunctorT F 
+                open F-Algebra Falg
+
+
+        record F-Alg-Mor {F : FunctorT 𝒞 𝒞} (Falg Galg : F-Algebra F) : Set (o ⊔ ℓ) where
+            open Category 𝒞
+            open FunctorT F 
+            module X = F-Algebra Falg 
+            module Y = F-Algebra Galg 
+            field 
+                alg-map : X.carrier ⇒ Y.carrier
+                commutes : (alg-map ∘ X.alg) ≡ (Y.alg ∘ F₁ alg-map)
+
+        Eq-F-Alg-Mor : {F : FunctorT 𝒞 𝒞}{F G : F-Algebra F}{ϕ ψ : F-Alg-Mor F G}
+            → F-Alg-Mor.alg-map ϕ ≡ F-Alg-Mor.alg-map ψ →  ϕ ≡ ψ
+        Eq-F-Alg-Mor = {!   !}
+            
+        open Category
+        F-Algebras : (F : FunctorT 𝒞 𝒞) → Category (o ⊔ ℓ) (o ⊔ ℓ) 
+        F-Algebras F .Ob    = F-Algebra F
+        F-Algebras F ._⇒_   = F-Alg-Mor
+        F-Algebras F .id {x} = record { alg-map = 𝒞 .id ; commutes = 
+            (𝒞 ∘ 𝒞 .id) alg         ≡⟨ 𝒞 .idl ⟩ 
+            alg                      ≡⟨ sym (𝒞 .idr) ⟩ 
+            (𝒞 ∘ alg) (𝒞 .id)       ≡⟨ cong₂ (𝒞 ._∘_) refl (sym Fid) ⟩ 
+            (𝒞 ∘ alg) (F₁ (𝒞 .id))  ∎ }
+            where 
+                open F-Algebra x
+                open FunctorT F
+
+        F-Algebras F ._∘_ {x}{y}{z} ϕ ψ  = new
+            where 
+                open F-Alg-Mor ϕ renaming (alg-map to alg-map₂; commutes to commutes₂)
+                open F-Alg-Mor ψ renaming (alg-map to alg-map₁; commutes to commutes₁)
+                open F-Algebra x renaming (carrier to carrier₁; alg to alg₁)
+                open F-Algebra y renaming (carrier to carrier₂; alg to alg₂)
+                open F-Algebra z renaming (carrier to carrier₃; alg to alg₃)
+
+                open F-Alg-Mor
+                open FunctorT F
+
+                open Category 𝒞 renaming (_∘_ to _∙_; assoc to assoc')
+                new : F-Alg-Mor x z 
+                new .alg-map = alg-map₂ ∙ alg-map₁
+                new .commutes = 
+                    (alg-map₂ ∙ alg-map₁) ∙ alg₁ ≡⟨ sym assoc' ⟩ 
+                    alg-map₂ ∙ (alg-map₁ ∙ alg₁) ≡⟨ cong₂ _∙_ refl commutes₁ ⟩
+                    alg-map₂ ∙ (alg₂ ∙ F₁ alg-map₁) ≡⟨ assoc' ⟩ 
+                    (alg-map₂ ∙ alg₂) ∙ F₁ alg-map₁ ≡⟨ cong₂ _∙_ commutes₂ refl ⟩
+                    (alg₃ ∙ F₁ alg-map₂) ∙ F₁ alg-map₁ ≡⟨ sym assoc' ⟩
+                    alg₃ ∙ (F₁ alg-map₂ ∙ F₁ alg-map₁) ≡⟨ cong₂ _∙_ refl (sym Fcomp) ⟩ 
+                    alg₃ ∙ (F₁ (alg-map₂ ∙ alg-map₁)) ∎
+                
+                
+        F-Algebras F .idl   = Eq-F-Alg-Mor (𝒞 .idl)
+        F-Algebras F .idr   = Eq-F-Alg-Mor (𝒞 .idr)
+        F-Algebras F .assoc = Eq-F-Alg-Mor (𝒞 .assoc)
+
+        
+  
