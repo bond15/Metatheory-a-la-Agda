@@ -159,14 +159,10 @@ module AgdaFunCat where
                           ; (InR x) → cong InR (funExt⁻ (Fid G) x)}
     (F + G) .Fcomp = funExt λ {(InL x) → cong InL (funExt⁻ (Fcomp F) x)
                              ; (InR x) → cong InR (funExt⁻ (Fcomp G) x)}
-
-
-    bar : {F G C : FunctorT Agda Agda}→ F ~> C → G ~> C  → (X : Ob Agda) → (Agda ⇒ F₀ (F + G) X) (F₀ C X)
-    bar {F = F} ϕ ψ x (InL Fx) = ϕ .η x Fx
-    bar {G = G} ϕ ψ x (InR Gx) = ψ .η x Gx
     
     _~+~_ : {F G H : FunctorT Agda Agda} →  F ~> H → G ~> H → (F + G) ~> H
-    (ϕ ~+~ ψ) .η = bar ϕ ψ  
+    (ϕ ~+~ ψ) .η X (InL Fx) = ϕ .η X Fx
+    (ϕ ~+~ ψ) .η X (InR Gx) = ψ .η X Gx 
     (ϕ ~+~ ψ) .commute {X} {Y} f = funExt λ {(InL Fx) → funExt⁻ (ϕ .commute f) Fx
                                            ; (InR Gx) → funExt⁻ (ψ .commute f) Gx }
 
