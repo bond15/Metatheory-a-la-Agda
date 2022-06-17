@@ -45,6 +45,25 @@ module AgdaCat where
                                     -- (Agda ∘ η ψ y) (F₁ F f) ≡ (Agda ∘ F₁ G f) (η ψ x)
             i -}
 
+
+    module Example where 
+        open F-alg Agda
+        open import Data.Unit
+        open import Data.Sum
+        f : FunctorT Agda Agda
+        f .F₀ X = ⊤ ⊎ X
+        f .F₁ f (inj₁ x) = inj₁ x
+        f .F₁ f (inj₂ y) = inj₂ (f y)
+        -- peeking under the hood, not using a formal coproduct object
+        f .Fid = funExt λ {(inj₁ x) → refl 
+                        ; (inj₂ y) → refl}
+        f .Fcomp = funExt λ {(inj₁ x) → refl
+                        ; (inj₂ y) → refl}
+
+        -- a category of F-Algebras for the given functor f
+        ex : Category (ℓ-suc ℓ-zero) (ℓ-suc ℓ-zero)              
+        ex = F-Algebras f
+
 module FunCatPoly where 
     open import Poly renaming (lift to liftPoly)
     open Poly[_,_]
