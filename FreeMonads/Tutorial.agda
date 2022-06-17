@@ -22,7 +22,7 @@ module DSLs where
         data ConsoleF (X : Set) : Set where 
             -- PutStrLn takes a string to output
             PutStrLn : String → X → ConsoleF X 
-            -- GetLine takes a continuation which is feed a String
+            -- GetLine takes a continuation which is fed a String
             GetLine  : (String → X) → ConsoleF X
 
         -- This can be ignored :) 
