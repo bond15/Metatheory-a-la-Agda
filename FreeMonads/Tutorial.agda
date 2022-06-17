@@ -3,7 +3,7 @@
 module Tutorial where 
 
 
--- This modules contains 3 DSLs
+-- This module contains 3 DSLs
 -- One describing a Console with read and write actions
 -- One describing a KeyValue store with get and put actions
 -- One describing a LoginServer
