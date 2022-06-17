@@ -157,6 +157,22 @@ module CatLib where
             --_⁂_ : A ⇒ B → C ⇒ D → A × C ⇒ B × D
             --f ⁂ g = [ product ⇒ product ] f × g
 
+    module BinaryCoproducts {o h} (𝒞 : Category o h) where
+        open ObjectCoproduct 𝒞
+        open Category 𝒞
+        open import Level using (levelOfTerm)
+        private 
+            variable
+                A B C D : Ob 
+
+        record BinaryCoproductsT : Set (levelOfTerm 𝒞) where
+            infixr 7 _+_
+            field 
+                coproduct : ∀{A B : Ob} → Coproduct A B
+
+            _+_ : Ob → Ob → Ob 
+            A + B = Coproduct.A+B (coproduct {A} {B})
+
     module Terminal {o h} (𝒞 : Category o h) where
         open Category 𝒞
         
@@ -281,6 +297,9 @@ module CatLib where
             field
                 η           : ∀ X → F₀ X ⇒D G₀ X 
                 commute     : ∀{X Y} → (f : X ⇒C Y) → (η Y ∘D F₁ f) ≡ (G₁ f ∘D η X) 
+
+        _~>_ : {o ℓ : Level}{C : Category o ℓ} {D : Category o ℓ}(F G : FunctorT C D) → Set (o ⊔ ℓ )
+        F ~> G = NaturalTransformationT F G
 
     module BiFunctor {o ℓ}(𝒞 𝒟 ℬ : Category o ℓ) where
         open import Level using (levelOfTerm)

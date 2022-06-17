@@ -25,7 +25,6 @@ module AgdaCat where
     agda-set A B f g f≡g₁ f≡g₂ = {!   !}
     open Functor
     open NaturalTransformation
-    _~>_ = NaturalTransformationT
     open NaturalTransformationT
     open import Cubical.Foundations.Prelude
     open FunctorT
@@ -82,25 +81,16 @@ module FunCatPoly where
     -- Displayed category using PFun and PNat??
     -- PFun And PNat include the Laws!
     open Displayed
-   {-  AgdaFunCat : Displayed PolyCat (suc zero) (suc zero) 
-    Ob[ AgdaFunCat ] p = FreeMonad.Functor ⦅ p ⦆ -- add laws here
-    Hom[ AgdaFunCat ] p⇒q = FreeMonad._~>'_
-    AgdaFunCat .id' = α≔ λ x → x
-    AgdaFunCat ._∘'_ = _∙'_
-    AgdaFunCat .idr' = λ f' → refl
-    AgdaFunCat .idl' = λ f' → refl
-    AgdaFunCat .assoc' = λ f' g' h' → refl -}
 
+    open AgdaCat using (Nat-pathp)
     AgdaFunCat' : Displayed PolyCat (suc zero) (suc zero) 
     Ob[ AgdaFunCat' ] p = FreeMonad.Functor' ⦅ p ⦆ -- add laws here
     Hom[ AgdaFunCat' ] p⇒q = FreeMonad._~>'_
     AgdaFunCat' .id' = α≔ (λ x → x) st λ f → refl
     AgdaFunCat' ._∘'_ = _∙'_
-    AgdaFunCat' .idr' f = {!   !}
+    AgdaFunCat' .idr' f = {! Nat-pathp  !}
     AgdaFunCat' .idl' = {!   !}
     AgdaFunCat' .assoc' = {!   !}
-
-
 
 -- consider only the subcategory of the endofunctor category spaned by Poly?
 module AgdaFunCat where 
@@ -122,7 +112,6 @@ module AgdaFunCat where
     idNat F .η X = Agda .id
     idNat F .commute f = refl
     
-
     open AgdaCat using (Nat-pathp)
 
     AgdaFun : Category (suc (suc zero)) (suc zero) 
@@ -154,4 +143,46 @@ module AgdaFunCat where
                         
     AgdaFun .idl = Nat-pathp λ x → refl             
     AgdaFun .idr = Nat-pathp λ x → refl
-    AgdaFun .assoc = Nat-pathp λ x → refl   
+    AgdaFun .assoc = Nat-pathp λ x → refl  
+
+    data _⊹_ (F G : Set → Set)(E : Set): Set where 
+        InL : F E → (F ⊹ G) E 
+        InR : G E → (F ⊹ G) E
+        
+    _+_ : (F G : FunctorT Agda Agda) → FunctorT Agda Agda
+    (F + G) .F₀ = F₀ F ⊹ F₀ G
+    (F + G) .F₁ f = λ{ (InL FA) → InL ((F₁ F f) FA)
+                     ; (InR GA) → InR ((F₁ G f) GA)}
+    (F + G) .Fid = funExt λ{(InL x) → cong InL (funExt⁻ (Fid F) x)
+                          ; (InR x) → cong InR (funExt⁻ (Fid G) x)}
+    (F + G) .Fcomp = funExt λ {(InL x) → cong InL (funExt⁻ (Fcomp F) x)
+                             ; (InR x) → cong InR (funExt⁻ (Fcomp G) x)}
+
+
+    bar : {F G C : FunctorT Agda Agda}→ F ~> C → G ~> C  → (X : Ob Agda) → (Agda ⇒ F₀ (F + G) X) (F₀ C X)
+    bar {F = F} ϕ ψ x (InL Fx) = ϕ .η x Fx
+    bar {G = G} ϕ ψ x (InR Gx) = ψ .η x Gx
+    
+    _~+~_ : {F G H : FunctorT Agda Agda} →  F ~> H → G ~> H → (F + G) ~> H
+    (ϕ ~+~ ψ) .η = bar ϕ ψ  
+    (ϕ ~+~ ψ) .commute {X} {Y} f = funExt λ {(InL Fx) → funExt⁻ (ϕ .commute f) Fx
+                                           ; (InR Gx) → funExt⁻ (ψ .commute f) Gx }
+
+    
+    open BinaryCoproducts AgdaFun
+    open ObjectCoproduct AgdaFun
+
+    Co : ∀ (F G : FunctorT Agda Agda) → Coproduct F G
+    Co F G = record
+        { A+B = F + G
+        ; inj₁ = record { η = λ x → InL ; commute = λ f → refl }
+        ; inj₂ = record { η = λ x → InR ; commute = λ f → refl }
+        ; ⟨_+_⟩ = _~+~_
+        ; inject₁ = Nat-pathp λ x → refl
+        ; inject₂ = Nat-pathp λ x → refl
+        ; unique = λ {h} {f} {g} p q → Nat-pathp λ ob → funExt λ {(InL l) → {! p !}
+                                                    ; (InR r) → {!   !}}
+        }
+
+    AgdaFunCoproducts : BinaryCoproductsT
+    AgdaFunCoproducts = record { coproduct = Co _ _ } 
