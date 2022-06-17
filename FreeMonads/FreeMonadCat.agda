@@ -83,14 +83,16 @@ module FunCatPoly where
     open Displayed
 
     open AgdaCat using (Nat-pathp)
-    AgdaFunCat' : Displayed PolyCat (suc zero) (suc zero) 
-    Ob[ AgdaFunCat' ] p = FreeMonad.Functor' ⦅ p ⦆ -- add laws here
-    Hom[ AgdaFunCat' ] p⇒q = FreeMonad._~>'_
-    AgdaFunCat' .id' = α≔ (λ x → x) st λ f → refl
-    AgdaFunCat' ._∘'_ = _∙'_
-    AgdaFunCat' .idr' f = {! Nat-pathp  !}
-    AgdaFunCat' .idl' = {!   !}
-    AgdaFunCat' .assoc' = {!   !}
+    AgdaFunCat : Displayed PolyCat (suc zero) (suc zero) 
+    Ob[ AgdaFunCat ] p = FreeMonad.Functor' ⦅ p ⦆
+    Hom[ AgdaFunCat ] p⇒q = FreeMonad._~>'_
+    AgdaFunCat .id' = α≔ (λ x → x) st λ f → refl
+    AgdaFunCat ._∘'_ = _∙'_
+    AgdaFunCat .idr' f = {! idr PolyCat !} -- need a "nat path"
+    AgdaFunCat .idl' = {!   !}
+    AgdaFunCat .assoc' = {!   !}
+
+
 
 -- consider only the subcategory of the endofunctor category spaned by Poly?
 module AgdaFunCat where 
@@ -186,3 +188,8 @@ module AgdaFunCat where
 
     AgdaFunCoproducts : BinaryCoproductsT
     AgdaFunCoproducts = record { coproduct = Co _ _ } 
+
+-- Free  objects?
+--https://github.com/agda/agda-categories/blob/29d4b15ca6e23cfb2e437b049618a4cac769d52b/src/Categories/FreeObjects/Free.agda
+
+-- How to write Free Monad?

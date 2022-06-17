@@ -51,7 +51,7 @@ record _~>'_ {F G : Set → Set}(F' : Functor' F)(G' : Functor' G) : Set₁ wher
     G-fmap = G' .Functor'.fmap'
     field
         α : ∀ {A} → F A → G A -- component of a natural transformation
-        commmute : ∀{A B : Set }(f : A → B) → α ∘ F-fmap f ≡ G-fmap f ∘ α
+        commute : ∀{A B : Set }(f : A → B) → α ∘ F-fmap f ≡ G-fmap f ∘ α
 
 -- definition of the free monad
 {-# NO_POSITIVITY_CHECK #-}
