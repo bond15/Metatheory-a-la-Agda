@@ -500,6 +500,11 @@ module CatLib where
                 open FunctorT F 
                 open F-Algebra Falg
 
+        open import Data.Nat hiding (_⊔_)
+        iterate-n : {F : FunctorT 𝒞 𝒞} → F-Algebra F → ℕ → F-Algebra F
+        iterate-n alg zero = alg
+        iterate-n alg (suc n) = iterate-n (iterate alg) n
+
 
         record F-Alg-Mor {F : FunctorT 𝒞 𝒞} (Falg Galg : F-Algebra F) : Set (o ⊔ ℓ) where
             open Category 𝒞
