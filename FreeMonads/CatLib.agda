@@ -480,6 +480,15 @@ module CatLib where
                 (f' : Hom[ f ] y z) → (g' : Hom[ g ] x y) → (h' : Hom[ h ] w x) → 
                 f' ∘' (g' ∘' h') ≡[ assoc ] ((f' ∘' g') ∘' h' )
 
+    module Initial {o ℓ} (𝒞 : Category o ℓ) where 
+        open Category 𝒞
+
+        record InitialOb : Set (o ⊔ ℓ) where 
+            field 
+                ⊥ : Ob 
+                ! : {A : Ob} → (⊥ ⇒ A)
+                !-unique : {A : Ob} → (f : ⊥ ⇒ A) → ! ≡ f
+
     module F-alg {o ℓ} (𝒞 : Category o ℓ) where 
         open Functor
     
@@ -559,6 +568,23 @@ module CatLib where
         F-Algebras F .idl   = Eq-F-Alg-Mor (𝒞 .idl)
         F-Algebras F .idr   = Eq-F-Alg-Mor (𝒞 .idr)
         F-Algebras F .assoc = Eq-F-Alg-Mor (𝒞 .assoc)
+
+
+    module Lambek {o ℓ} 
+            {𝒞 : Category o ℓ}
+            {F : Functor.FunctorT 𝒞 𝒞} where
+        open F-alg 𝒞
+        
+        open Initial (F-Algebras F)
+
+        open Category (F-Algebras F)
+        init : {! Ob  !}
+        init = InitialOb
+        
+        
+
+        lambek : {!   !}
+        lambek = {!   !}
 
         
   
