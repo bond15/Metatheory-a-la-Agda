@@ -502,7 +502,7 @@ module CatLib where
         
         iterate : {F : FunctorT 𝒞 𝒞} → F-Algebra F → F-Algebra F
         iterate {F} Falg = record { 
-                            carrier = F₀ carrier ; 
+                            carrier = F₀ carrier ; -- composition product in Poly?
                             alg = F₁ alg
                             }
             where 
