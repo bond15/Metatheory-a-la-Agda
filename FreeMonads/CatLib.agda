@@ -573,18 +573,86 @@ module CatLib where
     module Lambek {o ℓ} 
             {𝒞 : Category o ℓ}
             {F : Functor.FunctorT 𝒞 𝒞} where
+        -- given a category C and an endofunctor F of that category
         open F-alg 𝒞
         
-        open Initial (F-Algebras F)
+        -- There is a category of F-algebras for that functor F
+        CatF : Category (ℓ-max o ℓ) (ℓ-max o ℓ) 
+        CatF = F-Algebras F
 
-        open Category (F-Algebras F)
-        init : {! Ob  !}
-        init = InitialOb
-        
-        
+        -- If, this category CatF has an initial object..
+        open Initial CatF
+        module foo (init : InitialOb) where 
+            open InitialOb init 
+            open Category 𝒞 
+            open Category CatF renaming (_⇒_ to _⇒F_; _∘_ to _∘F_; id to idF)
+            open F-Algebra
+            open F-Alg-Mor renaming(commutes to alg-comm)
+            open Iso 𝒞
+            open _≅_
+            open Functor.FunctorT F
 
-        lambek : {!   !}
-        lambek = {!   !}
+            -- why?
+            F⊥ : F-Algebra F 
+            F⊥ = iterate ⊥
+
+
+            {-   ⊥          F⊥
+            
+                    F₁(m)
+                F(A) - - > F(F(A))
+                |↑           |   
+              o || i  f      | α
+                ↓|           ↓
+                 A - - - -> F(A)
+                      m
+            -}
+            f : ⊥ ⇒F F⊥
+            f = !
+
+            A = ⊥ .carrier
+
+            inn : A ⇒ F₀ A
+            inn = f .alg-map
+
+            out : F₀ A ⇒ A 
+            out = ⊥ .alg
+
+            {- 
+                 ⊥              ⊥
+                  
+                F(A) --------> F(A)
+                ↑ |            ↑ |
+            inn | | out     inn| | out
+                | ↓            | ↓ 
+                 A  ----------> A
+            
+            -}
+            oof : ⊥ ⇒F ⊥ 
+            oof .alg-map = out ∘ inn
+            -- goal out ∘ F₁ (out ∘ inn)
+            oof .alg-comm = (out ∘ inn) ∘ out ≡⟨ {! !} ⟩ {!   !}
+
+
+            {-
+                 ⊥
+                  
+                F(A)
+                ↑ |
+            inn | | out 
+                | ↓ 
+                 A 
+            -}
+
+            lambek : A ≅ F₀ A
+            lambek .from = inn
+            lambek .to = out
+            lambek .isoˡ = out ∘ inn ≡⟨ {!   !} ⟩  {! id  !}
+            lambek .isoʳ = inn ∘ out ≡⟨ {!   !} ⟩ {! id  !}
 
         
+<<<<<<< Updated upstream
   
+=======
+    
+>>>>>>> Stashed changes
